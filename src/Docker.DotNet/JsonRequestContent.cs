@@ -10,27 +10,21 @@ namespace Docker.DotNet
         private const string JsonMimeType = "application/json";
 
         private readonly T _value;
-        private readonly JsonSerializer _serializer;
 
-        public JsonRequestContent(T val, JsonSerializer serializer)
+        public JsonRequestContent(T val)
         {
             if (EqualityComparer<T>.Default.Equals(val))
             {
                 throw new ArgumentNullException(nameof(val));
             }
 
-            if (serializer == null)
-            {
-                throw new ArgumentNullException(nameof(serializer));
-            }
-
-            this._value = val;
-            this._serializer = serializer;
+            _value = val;
         }
 
         public HttpContent GetContent()
         {
-            var serializedObject = this._serializer.SerializeObject(this._value);
+            var serializedObject = JsonSerializer.SerializeObject(_value);
+
             return new StringContent(serializedObject, Encoding.UTF8, JsonMimeType);
         }
     }

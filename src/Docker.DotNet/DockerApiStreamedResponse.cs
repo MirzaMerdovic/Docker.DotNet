@@ -14,9 +14,9 @@ namespace Docker.DotNet
 
         public DockerApiStreamedResponse(HttpStatusCode statusCode, Stream body, HttpResponseHeaders headers)
         {
-            this.StatusCode = statusCode;
-            this.Body = body;
-            this.Headers = headers;
+            StatusCode = statusCode;
+            Body = body;
+            Headers = headers;
         }
     }
 }

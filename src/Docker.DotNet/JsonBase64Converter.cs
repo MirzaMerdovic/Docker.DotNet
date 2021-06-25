@@ -16,7 +16,11 @@ namespace Docker.DotNet
             throw new NotImplementedException();
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader, 
+            Type objectType, 
+            object existingValue, 
+            Newtonsoft.Json.JsonSerializer serializer)
         {
             var strVal = reader.Value as string;
 

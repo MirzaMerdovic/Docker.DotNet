@@ -16,23 +16,22 @@ namespace Docker.DotNet
         public QueryString(T value)
         {
             if (EqualityComparer<T>.Default.Equals(value))
-            {
                 throw new ArgumentNullException(nameof(value));
-            }
 
-            this.Object = value;
-            this.QueryStringConverterInstanceFactory = new QueryStringConverterInstanceFactory();
-            this.AttributedPublicProperties = FindAttributedPublicProperties<T, QueryStringParameterAttribute>();
+            Object = value;
+            QueryStringConverterInstanceFactory = new QueryStringConverterInstanceFactory();
+            AttributedPublicProperties = FindAttributedPublicProperties<T, QueryStringParameterAttribute>();
         }
 
         public IDictionary<string, string[]> GetKeyValuePairs()
         {
             var queryParameters = new Dictionary<string, string[]>();
-            foreach (var pair in this.AttributedPublicProperties)
+
+            foreach (var pair in AttributedPublicProperties)
             {
                 var property = pair.Item1;
                 var attribute = pair.Item2;
-                var value = property.GetValue(this.Object, null);
+                var value = property.GetValue(Object, null);
 
                 // 'Required' check
                 if (attribute.IsRequired && value == null)
@@ -46,19 +45,18 @@ namespace Docker.DotNet
                 {
                     var keyStr = attribute.Name;
                     string[] valueStr;
+
                     if (attribute.ConverterType == null)
                     {
                         valueStr = new[] { value.ToString() };
                     }
                     else
                     {
-                        var converter = this.QueryStringConverterInstanceFactory.GetConverterInstance(attribute.ConverterType);
-                        valueStr = this.ConvertValue(converter, value);
+                        var converter = QueryStringConverterInstanceFactory.GetConverterInstance(attribute.ConverterType);
+                        valueStr = ConvertValue(converter, value);
 
                         if (valueStr == null)
-                        {
                             throw new InvalidOperationException($"Got null from value converter '{attribute.ConverterType.FullName}'");
-                        }
                     }
 
                     queryParameters[keyStr] = valueStr;
@@ -84,10 +82,8 @@ namespace Docker.DotNet
         private string[] ConvertValue(IQueryStringConverter converter, object value)
         {
             if (!converter.CanConvert(value.GetType()))
-            {
-                throw new InvalidOperationException(
-                    $"Cannot convert type {value.GetType().FullName} using {converter.GetType().FullName}.");
-            }
+                throw new InvalidOperationException($"Cannot convert type {value.GetType().FullName} using {converter.GetType().FullName}.");
+
             return converter.Convert(value);
         }
 
@@ -98,28 +94,22 @@ namespace Docker.DotNet
 
             var properties = t.GetProperties();
             var publicProperties = properties.Where(p => p.GetGetMethod(false).IsPublic);
+            
             if (!publicProperties.Any())
-            {
                 throw new InvalidOperationException($"No public property getters found on type {t.FullName}.");
-            }
 
             var attributedPublicProperties = properties.Where(p => p.GetCustomAttribute<TAttribType>() != null).ToArray();
+            
             if (!attributedPublicProperties.Any())
-            {
-                throw new InvalidOperationException(
-                    $"No public properties attributed with [{ofAttributeType.FullName}] found on type {t.FullName}.");
-            }
+                throw new InvalidOperationException($"No public properties attributed with [{ofAttributeType.FullName}] found on type {t.FullName}.");
 
-            return attributedPublicProperties.Select(pi =>
-                new Tuple<PropertyInfo, TAttribType>(pi, pi.GetCustomAttribute<TAttribType>())).ToArray();
+            return attributedPublicProperties.Select(pi => new Tuple<PropertyInfo, TAttribType>(pi, pi.GetCustomAttribute<TAttribType>())).ToArray();
         }
 
         private static bool IsDefaultOfType(object o)
         {
             if (o is ValueType)
-            {
                 return o.Equals(Activator.CreateInstance(o.GetType()));
-            }
 
             return o == null;
         }

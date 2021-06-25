@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Docker.DotNet.Models;
@@ -58,14 +57,11 @@ namespace Docker.DotNet.Tests
         [Fact]
         public async Task MonitorEventsAsync_EmptyContainersList_CanBeCancelled()
         {
-            var progress = new Progress<Message>();
-
             using var cts = new CancellationTokenSource();
             cts.Cancel();
             await Task.Delay(1);
 
-            await Assert.ThrowsAsync<TaskCanceledException>(() => _client.System.MonitorEventsAsync(new ContainerEventsParameters(), progress, cts.Token));
-
+            await Assert.ThrowsAsync<TaskCanceledException>(() => _client.System.MonitorEventsAsync(new ContainerEventsParameters(), x => Task.CompletedTask, cts.Token));
         }
 
         [Fact]
@@ -94,21 +90,32 @@ namespace Docker.DotNet.Tests
 
             var wasProgressCalled = false;
 
-            var progressMessage = new Progress<Message>((m) =>
-            {
-                _output.WriteLine($"MonitorEventsAsync_Succeeds: Message - {m.Action} - {m.Status} {m.From} - {m.Type}");
-                wasProgressCalled = true;
-                Assert.NotNull(m);
-            });
-
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);
 
             var task = _client.System.MonitorEventsAsync(
                 new ContainerEventsParameters(),
-                progressMessage,
+                async m =>
+                {
+                    _output.WriteLine($"MonitorEventsAsync_Succeeds: Message - {m.Action} - {m.Status} {m.From} - {m.Type}");
+                    wasProgressCalled = true;
+                    Assert.NotNull(m);
+
+                    await Task.CompletedTask;
+                },
                 cts.Token);
 
-            await _client.Images.CreateImageAsync(new ImagesCreateParameters { FromImage = $"{_repositoryName}:{_tag}" }, null, progressJSONMessage, _cts.Token);
+            await _client.Images.CreateImageAsync(
+                new ImagesCreateParameters { FromImage = $"{_repositoryName}:{_tag}" }, 
+                null, 
+                async m =>
+                {
+                    // Status could be 'Pulling from...'
+                    Assert.NotNull(m);
+                    _output.WriteLine($"MonitorEventsAsync_Succeeds: JSONMessage - {m.ID} - {m.Status} {m.From} - {m.Stream}");
+
+                    await Task.CompletedTask;
+                }, 
+                _cts.Token);
 
             await _client.Images.TagImageAsync($"{_repositoryName}:{_tag}", new ImageTagParameters { RepositoryName = _repositoryName, Tag = newTag }, _cts.Token);
 
@@ -147,7 +154,12 @@ namespace Docker.DotNet.Tests
 
                     var monitorTask = _client.System.MonitorEventsAsync(
                         new ContainerEventsParameters(),
-                        new Progress<Message>((value) => _output.WriteLine($"DockerSystemEvent: {JsonConvert.SerializeObject(value)}")),
+                        async value =>
+                        {
+                            _output.WriteLine($"DockerSystemEvent: {JsonConvert.SerializeObject(value)}");
+
+                            await Task.CompletedTask;
+                        },
                         cts.Token);
 
                     // (2) Wait for some time to make sure we get into blocking IO call
@@ -254,17 +266,24 @@ namespace Docker.DotNet.Tests
                 }
             };
 
-            var progress = new Progress<Message>((m) =>
-            {
-                progressCalledCounter++;
-                Assert.True(m.Status == "tag" || m.Status == "untag");
-                _output.WriteLine($"MonitorEventsFiltered_Succeeds: Message received: {m.Action} - {m.Status} {m.From} - {m.Type}");
-            });
-
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);
-            var task = Task.Run(() => _client.System.MonitorEventsAsync(eventsParams, progress, cts.Token));
+            var task = 
+                Task.Run(() => _client.System.MonitorEventsAsync(
+                    eventsParams,
+                    async m =>
+                    {
+                        progressCalledCounter++;
+                        Assert.True(m.Status == "tag" || m.Status == "untag");
+                        _output.WriteLine($"MonitorEventsFiltered_Succeeds: Message received: {m.Action} - {m.Status} {m.From} - {m.Type}");
 
-            await _client.Images.CreateImageAsync(new ImagesCreateParameters { FromImage = $"{_repositoryName}:{_tag}" }, null, new Progress<JSONMessage>());
+                        await Task.CompletedTask;
+                    },
+                    cts.Token));
+
+            await _client.Images.CreateImageAsync(
+                new ImagesCreateParameters { FromImage = $"{_repositoryName}:{_tag}" }, 
+                null, 
+                m => Task.CompletedTask);
 
             await _client.Images.TagImageAsync($"{_repositoryName}:{_tag}", new ImageTagParameters { RepositoryName = _repositoryName, Tag = newTag });
             await _client.Images.DeleteImageAsync($"{_repositoryName}:{newTag}", new ImageDeleteParameters());

@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text;
@@ -11,7 +10,7 @@ namespace Docker.DotNet.Models
 {
     internal static class StreamUtil
     {
-        internal static async Task MonitorStreamAsync(Task<Stream> streamTask, DockerClient client, CancellationToken cancellationToken, IProgress<string> progress)
+        internal static async Task MonitorStreamAsync(Task<Stream> streamTask, CancellationToken cancellationToken, Func<string, Task> progress)
         {
             var tcs = new TaskCompletionSource<string>();
 
@@ -22,12 +21,15 @@ namespace Docker.DotNet.Models
                 string line;
                 while ((line = await await Task.WhenAny(reader.ReadLineAsync(), tcs.Task)) != null)
                 {
-                    progress.Report(line);
+                    await progress(line);
                 }
             }
         }
 
-        internal static async Task MonitorStreamForMessagesAsync<T>(Task<Stream> streamTask, DockerClient client, CancellationToken cancellationToken, IProgress<T> progress)
+        internal static async Task MonitorStreamForMessagesAsync<T>(
+            Task<Stream> streamTask,
+            CancellationToken cancellationToken, 
+            Func<T, Task> progress)
         {
             var tcs = new TaskCompletionSource<bool>();
 
@@ -38,17 +40,20 @@ namespace Docker.DotNet.Models
             {
                 while (await await Task.WhenAny(jsonReader.ReadAsync(cancellationToken), tcs.Task))
                 {
-                    var ev = await client.JsonSerializer.Deserialize<T>(jsonReader, cancellationToken);
-                    progress.Report(ev);
+                    var ev = await JsonSerializer.Deserialize<T>(jsonReader, cancellationToken);
+                    await progress(ev);
                 }
             }
         }
 
-        internal static async Task MonitorResponseForMessagesAsync<T>(Task<HttpResponseMessage> responseTask, DockerClient client, CancellationToken cancel, IProgress<T> progress)
+        internal static async Task MonitorResponseForMessagesAsync<T>(
+            Task<HttpResponseMessage> responseTask,
+            CancellationToken cancel, 
+            Func<T, Task> progress)
         {
             using (var response = await responseTask)
             {
-                await MonitorStreamForMessagesAsync<T>(response.Content.ReadAsStreamAsync(), client, cancel, progress);
+                await MonitorStreamForMessagesAsync(response.Content.ReadAsStreamAsync(), cancel, progress);
             }
         }
     }

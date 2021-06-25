@@ -20,32 +20,40 @@ namespace Docker.DotNet
             throw new NotImplementedException();
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader, 
+            Type objectType, 
+            object existingValue, 
+            Newtonsoft.Json.JsonSerializer serializer)
         {
-            var isNullableType = (objectType.GetTypeInfo().IsGenericType && objectType.GetGenericTypeDefinition() == typeof (Nullable<>));
+            var isNullableType = 
+                objectType.GetTypeInfo().IsGenericType && 
+                objectType.GetGenericTypeDefinition() == typeof (Nullable<>);
+            
             var value = reader.Value;
 
             DateTime result;
-            if (value is DateTime)
+
+            if (value is DateTime time)
             {
-                result = (DateTime) value;
+                result = time;
             }
-            else if (value is string)
+            else if (value is string @string)
             {
                 // ISO 8601 String
-                result = DateTime.Parse((string) value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+                result = DateTime.Parse(@string, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
             }
-            else if (value is long)
+            else if (value is long @int)
             {
                 // UNIX epoch timestamp (in seconds)
-                result = UnixEpochBase.AddSeconds((long) value);
+                result = UnixEpochBase.AddSeconds(@int);
             }
             else
             {
                 throw new NotImplementedException($"Deserializing {value.GetType().FullName} back to {objectType.FullName} is not handled.");
             }
 
-            if (isNullableType && result == default(DateTime))
+            if (isNullableType && result == default)
             {
                 return null; // do not set result on DateTime? field
             }

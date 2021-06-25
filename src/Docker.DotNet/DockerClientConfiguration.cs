@@ -20,13 +20,13 @@ namespace Docker.DotNet
             return isWindows ? new Uri("npipe://./pipe/docker_engine") : new Uri("unix:/var/run/docker.sock");
         }
 
-        public DockerClientConfiguration(Credentials credentials = null, TimeSpan defaultTimeout = default(TimeSpan))
+        public DockerClientConfiguration(Credentials credentials = null, TimeSpan defaultTimeout = default)
             : this(LocalDockerUri(), credentials, defaultTimeout)
         {
         }
 
         public DockerClientConfiguration(Uri endpoint, Credentials credentials = null,
-            TimeSpan defaultTimeout = default(TimeSpan))
+            TimeSpan defaultTimeout = default)
         {
             if (endpoint == null)
                 throw new ArgumentNullException(nameof(endpoint));
@@ -46,7 +46,7 @@ namespace Docker.DotNet
 
         public DockerClient CreateClient()
         {
-            return this.CreateClient(null);
+            return CreateClient(null);
         }
 
         public DockerClient CreateClient(Version requestedApiVersion)

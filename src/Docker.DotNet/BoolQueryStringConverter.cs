@@ -1,9 +1,9 @@
-﻿namespace Docker.DotNet
-{
-    using System;
-    using System.Diagnostics;
-    using System.Globalization;
+﻿using System;
+using System.Diagnostics;
+using System.Globalization;
 
+namespace Docker.DotNet
+{
     internal class BoolQueryStringConverter : IQueryStringConverter
     {
         public bool CanConvert(Type t)

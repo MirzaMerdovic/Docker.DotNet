@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Docker.DotNet.Models;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
+using Docker.DotNet.Models;
 
 namespace Docker.DotNet
 {
@@ -20,7 +20,7 @@ namespace Docker.DotNet
         /// <exception cref="ArgumentNullException">One or more of the inputs was <see langword="null"/>.</exception>
         /// <exception cref="DockerApiException">The input is invalid or the daemon experienced an error.</exception>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task<IList<ImagesListResponse>> ListImagesAsync(ImagesListParameters parameters, CancellationToken cancellationToken = default(CancellationToken));
+        Task<IList<ImagesListResponse>> ListImagesAsync(ImagesListParameters parameters, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Builds an image from a tar archive that contains a Dockerfile.
@@ -43,7 +43,7 @@ namespace Docker.DotNet
         /// <exception cref="ArgumentNullException">One or more of the inputs was <see langword="null"/>.</exception>
         /// <exception cref="DockerApiException">The input is invalid or the daemon experienced an error.</exception>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task<Stream> BuildImageFromDockerfileAsync(Stream contents, ImageBuildParameters parameters, CancellationToken cancellationToken = default(CancellationToken));
+        Task<Stream> BuildImageFromDockerfileAsync(Stream contents, ImageBuildParameters parameters, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Creates an image by either pulling it from a registry or importing it.
@@ -59,7 +59,7 @@ namespace Docker.DotNet
         /// current auth status, the input is invalid, or the daemon experienced an error.</exception>
         /// </remarks>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task CreateImageAsync(ImagesCreateParameters parameters, AuthConfig authConfig, IProgress<JSONMessage> progress, CancellationToken cancellationToken = default(CancellationToken));
+        Task CreateImageAsync(ImagesCreateParameters parameters, AuthConfig authConfig, Func<JSONMessage, Task> progress, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Creates an image by either pulling it from a registry or importing it.
@@ -76,7 +76,7 @@ namespace Docker.DotNet
         /// current auth status, the input is invalid, or the daemon experienced an error.</exception>
         /// </remarks>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task CreateImageAsync(ImagesCreateParameters parameters, AuthConfig authConfig, IDictionary<string, string> headers, IProgress<JSONMessage> progress, CancellationToken cancellationToken = default(CancellationToken));
+        Task CreateImageAsync(ImagesCreateParameters parameters, AuthConfig authConfig, IDictionary<string, string> headers, Func<JSONMessage, Task> progress, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Creates an image by importing it from a stream.
@@ -93,7 +93,7 @@ namespace Docker.DotNet
         /// current auth status, the input is invalid, or the daemon experienced an error.</exception>
         /// </remarks>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task CreateImageAsync(ImagesCreateParameters parameters, Stream imageStream, AuthConfig authConfig, IProgress<JSONMessage> progress, CancellationToken cancellationToken = default(CancellationToken));
+        Task CreateImageAsync(ImagesCreateParameters parameters, Stream imageStream, AuthConfig authConfig, Func<JSONMessage, Task> progress, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Creates an image by importing it from a stream.
@@ -111,7 +111,7 @@ namespace Docker.DotNet
         /// current auth status, the input is invalid, or the daemon experienced an error.</exception>
         /// </remarks>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task CreateImageAsync(ImagesCreateParameters parameters, Stream imageStream, AuthConfig authConfig, IDictionary<string, string> headers, IProgress<JSONMessage> progress, CancellationToken cancellationToken = default(CancellationToken));
+        Task CreateImageAsync(ImagesCreateParameters parameters, Stream imageStream, AuthConfig authConfig, IDictionary<string, string> headers, Func<JSONMessage, Task> progress, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Retrieves low-level information about an image.
@@ -125,7 +125,7 @@ namespace Docker.DotNet
         /// <exception cref="DockerImageNotFoundException">No such image was found.</exception>
         /// <exception cref="DockerApiException">The input is invalid or the daemon experienced an error.</exception>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task<ImageInspectResponse> InspectImageAsync(string name, CancellationToken cancellationToken = default(CancellationToken));
+        Task<ImageInspectResponse> InspectImageAsync(string name, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the "history" (parent layers) of an image.
@@ -139,7 +139,7 @@ namespace Docker.DotNet
         /// <exception cref="DockerImageNotFoundException">No such image was found.</exception>
         /// <exception cref="DockerApiException">The input is invalid or the daemon experienced an error.</exception>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task<IList<ImageHistoryResponse>> GetImageHistoryAsync(string name, CancellationToken cancellationToken = default(CancellationToken));
+        Task<IList<ImageHistoryResponse>> GetImageHistoryAsync(string name, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Pushes an image to a registry.
@@ -161,7 +161,7 @@ namespace Docker.DotNet
         /// <exception cref="DockerImageNotFoundException">No such image was found.</exception>
         /// <exception cref="DockerApiException">The input is invalid or the daemon experienced an error.</exception>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task PushImageAsync(string name, ImagePushParameters parameters, AuthConfig authConfig, IProgress<JSONMessage> progress, CancellationToken cancellationToken = default(CancellationToken));
+        Task PushImageAsync(string name, ImagePushParameters parameters, AuthConfig authConfig, Func<JSONMessage, Task> progress, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Tags an image so that it becomes part of a registry.
@@ -177,7 +177,7 @@ namespace Docker.DotNet
         /// <exception cref="DockerImageNotFoundException">No such image was found.</exception>
         /// <exception cref="DockerApiException">There was a conflict, or the input is invalid, or the daemon experienced an error.</exception>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task TagImageAsync(string name, ImageTagParameters parameters, CancellationToken cancellationToken = default(CancellationToken));
+        Task TagImageAsync(string name, ImageTagParameters parameters, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Removes an image, along with any untagged parent images that were referenced by that image.
@@ -196,7 +196,7 @@ namespace Docker.DotNet
         /// <exception cref="DockerImageNotFoundException">No such image was found.</exception>
         /// <exception cref="DockerApiException">There was a conflict, or the input is invalid, or the daemon experienced an error.</exception>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task<IList<IDictionary<string, string>>> DeleteImageAsync(string name, ImageDeleteParameters parameters, CancellationToken cancellationToken = default(CancellationToken));
+        Task<IList<IDictionary<string, string>>> DeleteImageAsync(string name, ImageDeleteParameters parameters, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Searchs for an image on Docker Hub.
@@ -209,7 +209,7 @@ namespace Docker.DotNet
         /// <exception cref="ArgumentNullException">One or more of the inputs was <see langword="null"/>.</exception>
         /// <exception cref="DockerApiException">There was a conflict, or the input is invalid, or the daemon experienced an error.</exception>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task<IList<ImageSearchResponse>> SearchImagesAsync(ImagesSearchParameters parameters, CancellationToken cancellationToken = default(CancellationToken));
+        Task<IList<ImageSearchResponse>> SearchImagesAsync(ImagesSearchParameters parameters, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Deletes unused images.
@@ -222,7 +222,7 @@ namespace Docker.DotNet
         /// <exception cref="ArgumentNullException">One or more of the inputs was <see langword="null"/>.</exception>
         /// <exception cref="DockerApiException">There was a conflict, or the input is invalid, or the daemon experienced an error.</exception>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task<ImagesPruneResponse> PruneImagesAsync(ImagesPruneParameters parameters = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<ImagesPruneResponse> PruneImagesAsync(ImagesPruneParameters parameters = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Create a new image from a container.
@@ -236,7 +236,7 @@ namespace Docker.DotNet
         /// <exception cref="DockerApiException">There was a conflict, or the input is invalid, or the daemon experienced an error.</exception>
         /// <exception cref="DockerContainerNotFoundException">No such container was found.</exception>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task<CommitContainerChangesResponse> CommitContainerChangesAsync(CommitContainerChangesParameters parameters, CancellationToken cancellationToken = default(CancellationToken));
+        Task<CommitContainerChangesResponse> CommitContainerChangesAsync(CommitContainerChangesParameters parameters, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Exports an image and its associated metadata as a tarball.
@@ -252,7 +252,7 @@ namespace Docker.DotNet
         /// <exception cref="DockerApiException">There was a conflict, or the input is invalid, or the daemon experienced an error.</exception>
         /// <exception cref="DockerImageNotFoundException">No such image was found.</exception>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task<Stream> SaveImageAsync(string name, CancellationToken cancellationToken = default(CancellationToken));
+        Task<Stream> SaveImageAsync(string name, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Exports multiple images and their associated metadata to a single tarball.
@@ -273,7 +273,7 @@ namespace Docker.DotNet
         /// <exception cref="DockerApiException">There was a conflict, or the input is invalid, or the daemon experienced an error.</exception>
         /// <exception cref="DockerImageNotFoundException">No such image was found.</exception>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task<Stream> SaveImagesAsync(string[] names, CancellationToken cancellationToken = default(CancellationToken));
+        Task<Stream> SaveImagesAsync(string[] names, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Loads a set of images and tags into a Docker repository.
@@ -288,6 +288,6 @@ namespace Docker.DotNet
         /// <exception cref="ArgumentNullException">One or more of the inputs was <see langword="null"/>.</exception>
         /// <exception cref="DockerApiException">There was a conflict, or the input is invalid, or the daemon experienced an error.</exception>
         /// <exception cref="HttpRequestException">The request failed due to an underlying issue such as network connectivity, DNS failure, server certificate validation or timeout.</exception>
-        Task LoadImageAsync(ImageLoadParameters parameters, Stream imageStream, IProgress<JSONMessage> progress, CancellationToken cancellationToken = default(CancellationToken));
+        Task LoadImageAsync(ImageLoadParameters parameters, Stream imageStream, Func<JSONMessage, Task> progress, CancellationToken cancellationToken = default);
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Docker.DotNet.Models;
 using Newtonsoft.Json;
 using Xunit;
@@ -32,7 +33,13 @@ namespace Docker.DotNet.Tests
                     Tag = "latest"
                 },
                 null,
-                new Progress<JSONMessage>((m) => { Console.WriteLine(JsonConvert.SerializeObject(m)); Debug.WriteLine(JsonConvert.SerializeObject(m)); }),
+                async m => 
+                { 
+                    Console.WriteLine(JsonConvert.SerializeObject(m)); 
+                    Debug.WriteLine(JsonConvert.SerializeObject(m));
+
+                    await Task.CompletedTask;
+                },
                 cts.Token).GetAwaiter().GetResult();
 
             // Create local image tag to reuse

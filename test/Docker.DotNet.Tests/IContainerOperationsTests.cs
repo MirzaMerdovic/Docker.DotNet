@@ -116,7 +116,13 @@ namespace Docker.DotNet.Tests
                     Follow = true
                 },
                 containerLogsCts.Token,
-                new Progress<string>((m) => { _output.WriteLine(m); logList.Add(m); })
+                async m =>
+                {
+                    _output.WriteLine(m);
+                    logList.Add(m);
+
+                    await Task.CompletedTask;
+                }
             );
 
             await _dockerClient.Containers.StopContainerAsync(
@@ -161,7 +167,13 @@ namespace Docker.DotNet.Tests
                     Follow = false
                 },
                 containerLogsCts.Token,
-                new Progress<string>((m) => { logList.Add(m); _output.WriteLine(m); })
+                async m =>
+                {
+                    logList.Add(m);
+                    _output.WriteLine(m);
+
+                    await Task.CompletedTask;
+                }
             );
 
             await _dockerClient.Containers.StopContainerAsync(
@@ -211,7 +223,12 @@ namespace Docker.DotNet.Tests
                     Follow = true
                 },
                 containerLogsCts.Token,
-                new Progress<string>((m) => { _output.WriteLine(JsonConvert.SerializeObject(m)); logList.Add(m); })
+                async m =>
+                {
+                    _output.WriteLine(JsonConvert.SerializeObject(m)); logList.Add(m);
+
+                    await Task.CompletedTask;
+                }
             ));
         }
 
@@ -249,7 +266,13 @@ namespace Docker.DotNet.Tests
                     Follow = true
                 },
                 containerLogsCts.Token,
-                new Progress<string>((m) => { _output.WriteLine(m); logList.Add(m); })
+                async m =>
+                {
+                    _output.WriteLine(m);
+                    logList.Add(m);
+
+                    await Task.CompletedTask;
+                }
             );
 
             await Assert.ThrowsAsync<TaskCanceledException>(() => containerLogsTask);
@@ -289,7 +312,13 @@ namespace Docker.DotNet.Tests
                     Follow = true
                 },
                 containerLogsCts.Token,
-                new Progress<string>((m) => { _output.WriteLine(m); logList.Add(m); })
+                async m =>
+                {
+                    _output.WriteLine(m);
+                    logList.Add(m);
+
+                    await Task.CompletedTask;
+                }
             );
 
             await Task.Delay(TimeSpan.FromSeconds(10));
@@ -368,7 +397,13 @@ namespace Docker.DotNet.Tests
                     Follow = false
                 },
                 containerLogsCts.Token,
-                new Progress<string>((m) => { _output.WriteLine(m); logList.Add(m); })
+                async m =>
+                {
+                    _output.WriteLine(m);
+                    logList.Add(m);
+
+                    await Task.CompletedTask;
+                }
             );
 
             await Task.Delay(TimeSpan.FromSeconds(10));
@@ -441,7 +476,13 @@ namespace Docker.DotNet.Tests
                 {
                     Stream = false
                 },
-                new Progress<ContainerStatsResponse>((m) => { _output.WriteLine(m.ID); containerStatsList.Add(m); }),
+                async m =>
+                {
+                    _output.WriteLine(m.ID);
+                    containerStatsList.Add(m);
+
+                    await Task.CompletedTask;
+                },
                 tcs.Token
             );
 
@@ -488,7 +529,13 @@ namespace Docker.DotNet.Tests
                         {
                             Stream = true
                         },
-                        new Progress<ContainerStatsResponse>((m) => { containerStatsList.Add(m); _output.WriteLine(JsonConvert.SerializeObject(m)); }),
+                        async m =>
+                        {
+                            containerStatsList.Add(m);
+                            _output.WriteLine(JsonConvert.SerializeObject(m));
+
+                            await Task.CompletedTask;
+                        },
                         linkedCts.Token
                     );
                 }
@@ -532,7 +579,13 @@ namespace Docker.DotNet.Tests
                 {
                     Stream = false
                 },
-                new Progress<ContainerStatsResponse>((m) => { _output.WriteLine(m.ID); containerStatsList.Add(m); }),
+                async m =>
+                {
+                    _output.WriteLine(m.ID);
+                    containerStatsList.Add(m);
+
+                    await Task.CompletedTask;
+                },
                 tcs.Token
             );
 
@@ -581,7 +634,11 @@ namespace Docker.DotNet.Tests
                         {
                             Stream = true
                         },
-                        new Progress<ContainerStatsResponse>((m) => { containerStatsList.Add(m); _output.WriteLine(JsonConvert.SerializeObject(m)); }),
+                        async m =>
+                        {
+                            containerStatsList.Add(m);
+                            _output.WriteLine(JsonConvert.SerializeObject(m));
+                        },
                         linkedTcs.Token
                     );
                 }

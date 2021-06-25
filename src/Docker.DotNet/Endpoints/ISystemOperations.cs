@@ -1,8 +1,7 @@
-﻿using System.IO;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Docker.DotNet.Models;
-using System;
 
 namespace Docker.DotNet
 {
@@ -18,7 +17,7 @@ namespace Docker.DotNet
         /// 204 - No error.
         /// 500 - Server error.
         /// </remarks>
-        Task AuthenticateAsync(AuthConfig authConfig, CancellationToken cancellationToken = default(CancellationToken));
+        Task AuthenticateAsync(AuthConfig authConfig, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get version.
@@ -31,7 +30,7 @@ namespace Docker.DotNet
         /// 200 - No error.
         /// 500 - Server error.
         /// </remarks>
-        Task<VersionResponse> GetVersionAsync(CancellationToken cancellationToken = default(CancellationToken));
+        Task<VersionResponse> GetVersionAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Ping.
@@ -42,21 +41,9 @@ namespace Docker.DotNet
         /// 200 - No error.
         /// 500 - Server error.
         /// </remarks>
-        Task PingAsync(CancellationToken cancellationToken = default(CancellationToken));
+        Task PingAsync(CancellationToken cancellationToken = default);
 
-        /// <summary>
-        /// Get system information.
-        /// </summary>
-        /// <remarks>
-        /// docker info
-        ///
-        /// 200 - No error.
-        /// 500 - Server error.
-        /// </remarks>
-        Task<SystemInfoResponse> GetSystemInfoAsync(CancellationToken cancellationToken = default(CancellationToken));
-
-        [Obsolete("Use 'Task MonitorEventsAsync(ContainerEventsParameters parameters, CancellationToken cancellationToken, IProgress<JSONMessage> progress)'")]
-        Task<Stream> MonitorEventsAsync(ContainerEventsParameters parameters, CancellationToken cancellationToken);
+        Task<SystemInfoResponse> GetSystemInfoAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Monitor events.
@@ -79,6 +66,6 @@ namespace Docker.DotNet
         /// 200 - No error.
         /// 500 - Server error.
         /// </remarks>
-        Task MonitorEventsAsync(ContainerEventsParameters parameters, IProgress<Message> progress, CancellationToken cancellationToken = default(CancellationToken));
+        Task MonitorEventsAsync(ContainerEventsParameters parameters, Func<Message, Task> progress, CancellationToken cancellationToken = default);
     }
 }

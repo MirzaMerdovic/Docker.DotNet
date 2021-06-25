@@ -92,7 +92,7 @@ namespace Microsoft.Net.Http.Client
             {
                 return (T)obj;
             }
-            return default(T);
+            return default;
         }
 
         public static void SetProperty<T>(this HttpRequestMessage request, string key, T value)

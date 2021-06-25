@@ -60,7 +60,11 @@ namespace Docker.DotNet.Tests
                     FromImage = $"{newRepositoryName}:{newTag}"
                 },
                 null,
-                new Progress<JSONMessage>((message) => _output.WriteLine(JsonConvert.SerializeObject(message))),
+                async message => 
+                {
+                    _output.WriteLine(JsonConvert.SerializeObject(message));
+                    await Task.CompletedTask;
+                },
                 cts.Token);
 
             TimeSpan delay = TimeSpan.FromMilliseconds(5);

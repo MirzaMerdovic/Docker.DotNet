@@ -10,8 +10,17 @@ namespace Docker.DotNet
 {
     internal class DockerPipeStream : WriteClosableStream, IPeekableStream
     {
-        private readonly PipeStream _stream;
+        [DllImport("api-ms-win-core-file-l1-1-0.dll", SetLastError = true)]
+        private static extern int WriteFile(SafeHandle handle, IntPtr buffer, int numBytesToWrite, IntPtr numBytesWritten, ref NativeOverlapped overlapped);
+
+        [DllImport("api-ms-win-core-io-l1-1-0.dll", SetLastError = true)]
+        private static extern int GetOverlappedResult(SafeHandle handle, ref NativeOverlapped overlapped, out int numBytesWritten, int wait);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool PeekNamedPipe(SafeHandle handle, byte[] buffer, uint nBufferSize, ref uint bytesRead, ref uint bytesAvail, ref uint BytesLeftThisMessage);
+
         private readonly EventWaitHandle _event = new EventWaitHandle(false, EventResetMode.AutoReset);
+        private readonly PipeStream _stream;
 
         public DockerPipeStream(PipeStream stream)
         {
@@ -26,10 +35,7 @@ namespace Docker.DotNet
 
         public override bool CanWrite => true;
 
-        public override long Length
-        {
-            get { throw new NotImplementedException(); }
-        }
+        public override long Length => throw new NotImplementedException();
 
         public override long Position
         {
@@ -37,15 +43,6 @@ namespace Docker.DotNet
 
             set { throw new NotImplementedException(); }
         }
-
-        [DllImport("api-ms-win-core-file-l1-1-0.dll", SetLastError = true)]
-        private static extern int WriteFile(SafeHandle handle, IntPtr buffer, int numBytesToWrite, IntPtr numBytesWritten, ref NativeOverlapped overlapped);
-
-        [DllImport("api-ms-win-core-io-l1-1-0.dll", SetLastError = true)]
-        private static extern int GetOverlappedResult(SafeHandle handle, ref NativeOverlapped overlapped, out int numBytesWritten, int wait);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool PeekNamedPipe(SafeHandle handle, byte[] buffer, uint nBufferSize, ref uint bytesRead, ref uint bytesAvail, ref uint BytesLeftThisMessage);
 
         public override void CloseWrite()
         {
@@ -80,10 +77,7 @@ namespace Docker.DotNet
             }
         }
 
-        public override void Flush()
-        {
-            throw new NotImplementedException();
-        }
+        public override void Flush() => throw new NotImplementedException();
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -101,30 +95,26 @@ namespace Docker.DotNet
             available = 0;
             remaining = 0;
 
-            bool aPeekedSuccess = PeekNamedPipe(
-                _stream.SafePipeHandle,
-                buffer, toPeek,
-                ref peeked, ref available, ref remaining);
+            bool aPeekedSuccess = 
+                PeekNamedPipe(
+                    _stream.SafePipeHandle,
+                    buffer, 
+                    toPeek,
+                    ref peeked, 
+                    ref available, 
+                    ref remaining);
 
             var error = Marshal.GetLastWin32Error();
 
             if (error == 0 && aPeekedSuccess)
-            {
                 return true;
-            }
 
             return false;
         }
 
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            throw new NotImplementedException();
-        }
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotImplementedException();
 
-        public override void SetLength(long value)
-        {
-            throw new NotImplementedException();
-        }
+        public override void SetLength(long value) => throw new NotImplementedException();
 
         public override void Write(byte[] buffer, int offset, int count)
         {

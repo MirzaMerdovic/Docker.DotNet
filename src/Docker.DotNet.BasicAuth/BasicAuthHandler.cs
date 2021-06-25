@@ -12,7 +12,8 @@ namespace Docker.DotNet.BasicAuth
         private readonly MaybeSecureString _username;
         private readonly MaybeSecureString _password;
 
-        public BasicAuthHandler(MaybeSecureString username, MaybeSecureString password, HttpMessageHandler innerHandler) : base(innerHandler)
+        public BasicAuthHandler(MaybeSecureString username, MaybeSecureString password, HttpMessageHandler innerHandler) 
+            : base(innerHandler)
         {
             _username = username.Copy();
             _password = password.Copy();
@@ -28,6 +29,7 @@ namespace Docker.DotNet.BasicAuth
         private string BuildParameters()
         {
             var authInfo = $"{_username}:{_password}";
+            
             return Convert.ToBase64String(Encoding.UTF8.GetBytes(authInfo));
         }
 

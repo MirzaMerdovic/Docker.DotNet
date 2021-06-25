@@ -6,10 +6,6 @@ namespace Docker.DotNet
     {
         DockerClientConfiguration Configuration { get; }
 
-        TimeSpan DefaultTimeout { get; set; }
-
-        #region Endpoints
-
         IContainerOperations Containers { get; }
 
         IImageOperations Images { get; }
@@ -30,6 +26,6 @@ namespace Docker.DotNet
 
         IExecOperations Exec { get; }
 
-        #endregion Endpoints
+        TimeSpan DefaultTimeout { get; set; }
     }
 }

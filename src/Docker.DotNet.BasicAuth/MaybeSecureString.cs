@@ -1,4 +1,5 @@
 using System;
+
 #if !NETSTANDARD1_6
 using System.Security;
 using System.Runtime.InteropServices;
@@ -15,9 +16,7 @@ namespace Docker.DotNet.BasicAuth
         public MaybeSecureString(string str)
         {
             if (string.IsNullOrEmpty(str))
-            {
                 throw new ArgumentNullException(nameof(str));
-            }
 
             var secureStr = new SecureString();
 
@@ -35,9 +34,7 @@ namespace Docker.DotNet.BasicAuth
         public MaybeSecureString(SecureString str)
         {
             if (str == null)
-            {
                 throw new ArgumentNullException(nameof(str));
-            }
 
             Value = str.Copy();
         }

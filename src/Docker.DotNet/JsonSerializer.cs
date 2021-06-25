@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -8,36 +9,38 @@ namespace Docker.DotNet
     /// <summary>
     /// Facade for <see cref="JsonConvert"/>.
     /// </summary>
-    internal class JsonSerializer
+    internal static class JsonSerializer
     {
-        private readonly Newtonsoft.Json.JsonSerializer _serializer;
-
-        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings
+        private static readonly Func<JsonSerializerSettings> Settings = delegate ()
         {
-            NullValueHandling = NullValueHandling.Ignore,
-            Converters = new JsonConverter[]
-            {
-                new JsonIso8601AndUnixEpochDateConverter(),
-                new JsonVersionConverter(),
-                new StringEnumConverter(),
-                new TimeSpanSecondsConverter(),
-                new TimeSpanNanosecondsConverter(),
-                new JsonBase64Converter()
-            }
+            return
+                new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    Converters = new JsonConverter[]
+                        {
+                            new JsonIso8601AndUnixEpochDateConverter(),
+                            new JsonVersionConverter(),
+                            new StringEnumConverter(),
+                            new TimeSpanSecondsConverter(),
+                            new TimeSpanNanosecondsConverter(),
+                            new JsonBase64Converter()
+                        }
+                };
         };
 
-        public JsonSerializer()
+        private static readonly Func<Newtonsoft.Json.JsonSerializer> Serializer = delegate ()
         {
-            _serializer = Newtonsoft.Json.JsonSerializer.CreateDefault(this._settings);
-        }
+            return Newtonsoft.Json.JsonSerializer.CreateDefault(Settings());
+        };
 
-        public Task<T> Deserialize<T>(JsonReader jsonReader, CancellationToken cancellationToken)
+        public static Task<T> Deserialize<T>(JsonReader jsonReader, CancellationToken cancellationToken)
         {
             var tcs = new TaskCompletionSource<T>();
             using (cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken)))
             {
                 Task.Factory.StartNew(
-                    () => tcs.TrySetResult(_serializer.Deserialize<T>(jsonReader)),
+                    () => tcs.TrySetResult(Serializer().Deserialize<T>(jsonReader)),
                     cancellationToken,
                     TaskCreationOptions.LongRunning,
                     TaskScheduler.Default
@@ -47,14 +50,14 @@ namespace Docker.DotNet
             }
         }
 
-        public T DeserializeObject<T>(string json)
+        public static T DeserializeObject<T>(string json)
         {
-            return JsonConvert.DeserializeObject<T>(json, this._settings);
+            return JsonConvert.DeserializeObject<T>(json, Settings());
         }
 
-        public string SerializeObject<T>(T value)
+        public static string SerializeObject<T>(T value)
         {
-            return JsonConvert.SerializeObject(value, this._settings);
+            return JsonConvert.SerializeObject(value, Settings());
         }
     }
 }
