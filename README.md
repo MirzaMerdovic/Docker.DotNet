@@ -1,44 +1,8 @@
-﻿# .NET Client for Docker Remote API
+﻿# Otter :otter: unoffical .NET Client for Docker Remote API -
 
-This library allows you to interact with [Docker Remote API][docker-remote-api]  endpoints in your .NET applications.
+Otter :otter: is a fork of .NET Foundation's [Docker DotNet client](https://github.com/dotnet/Docker.DotNet).
 
-It is fully asynchronous, designed to be non-blocking and object-oriented way to interact with your Docker daemon programmatically.
-
-## Versioning
-
-Version of this package uses [SemVer](https://semver.org/) format: `MAJOR.MINOR.PATCH`. `MINOR` segment indicates
-the [Docker Remote API][docker-remote-api] version support. For instance `v2.124.0` of this library supports
-[Docker Remote API][docker-remote-api] `v1.24`. This does not guarantee backwards compatibility as [Docker Remote API][docker-remote-api] does not guarantee that either.
-
-`MAJOR` is reserved for major breaking changes we make to the library itself such as how
-the calls are made or how authentication is made. `PATCH` is just for incremental bug fixes
-or non-breaking feature additions.
-
-## Installation
-
-You can add this library to your project using [NuGet][nuget].
-
-**Package Manager Console**
-Run the following command in the “Package Manager Console”:
-
-> PM> Install-Package Docker.DotNet
-
-**Visual Studio**
-Right click to your project in Visual Studio, choose “Manage NuGet Packages” and search for ‘Docker.DotNet’ and click ‘Install’.
-([see NuGet Gallery][nuget-gallery].)
-
-**.NET Core Command Line Interface**
-Run the following command from your favorite shell or terminal:
-
-> dotnet add package Docker.DotNet
-
-**Development Builds**
-
-![](https://ci.appveyor.com/api/projects/status/github/Microsoft/Docker.DotNet?branch=master&svg=true)
-
-If you intend to use development builds of Docker.DotNet and don't want to compile the code yourself you can add the package source below to Visual Studio or your Nuget.Config.
-
-> https://ci.appveyor.com/nuget/docker-dotnet-hojfmn6hoed7
+I have made some changes that suite my personal needs, most notable replace usage of `IProgress<T>` with `Func<T, Task>`.
 
 ## Usage
 
@@ -77,7 +41,8 @@ DockerClient client = new DockerClientConfiguration(
 
 ```csharp
 IList<ContainerListResponse> containers = await client.Containers.ListContainersAsync(
-	new ContainersListParameters(){
+	new ContainersListParameters()
+    {
 		Limit = 10,
     });
 ```
@@ -150,7 +115,7 @@ To obtain this stream you can use:
 
 ```csharp
 CancellationTokenSource cancellation = new CancellationTokenSource();
-Stream stream = await client.System.MonitorEventsAsync(new ContainerEventsParameters(), new Progress<JSONMessage>(), cancellation.Token);
+await client.System.MonitorEventsAsync(new ContainerEventsParameters(), msg => Task.Completed, cancellation.Token);
 // Initialize a StreamReader...
 ```
 
@@ -242,20 +207,9 @@ This project has adopted the code of conduct defined by the [Contributor Covenan
 
 General .NET OSS discussions: [.NET Foundation forums](https://forums.dotnetfoundation.org)
 
-## Contributing
-
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.dotnetfoundation.org.
-
-When you submit a pull request, a CLA-bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
-
-
 ## License
 
-Docker.DotNet is licensed under the [MIT](LICENSE) license.
+Otter :otter: is licensed under the [MIT](LICENSE) license.
 
 ---------------
 Copyright (c) .NET Foundation and Contributors

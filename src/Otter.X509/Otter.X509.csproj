@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Otter.X509</PackageId>
+    <Description>Otter.X509 is a library that allows you to use certificate authentication with a remote Docker engine programmatically in your .NET applications.</Description>
+    <AssemblyName>Otter.X509</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Otter\Otter.csproj" />
+  </ItemGroup>
+</Project>
