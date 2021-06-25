@@ -81,13 +81,6 @@ namespace Otter.Tests
         {
             var newTag = $"MonitorTests-{Guid.NewGuid().ToString().Substring(1, 10)}";
 
-            var progressJSONMessage = new Progress<JSONMessage>((m) =>
-            {
-                // Status could be 'Pulling from...'
-                Assert.NotNull(m);
-                _output.WriteLine($"MonitorEventsAsync_Succeeds: JSONMessage - {m.ID} - {m.Status} {m.From} - {m.Stream}");
-            });
-
             var wasProgressCalled = false;
 
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);

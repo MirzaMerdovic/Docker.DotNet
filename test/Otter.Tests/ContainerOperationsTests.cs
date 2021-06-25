@@ -638,6 +638,8 @@ namespace Otter.Tests
                         {
                             containerStatsList.Add(m);
                             _output.WriteLine(JsonConvert.SerializeObject(m));
+
+                            await Task.CompletedTask;
                         },
                         linkedTcs.Token
                     );
@@ -840,7 +842,7 @@ namespace Otter.Tests
 
             _output.WriteLine($"CreateContainerResponse: '{JsonConvert.SerializeObject(createContainerResponse)}'");
 
-            var startContainerResult = await _dockerClient.Containers.StartContainerAsync(createContainerResponse.ID, new ContainerStartParameters(), waitContainerCts.Token);
+            _ = await _dockerClient.Containers.StartContainerAsync(createContainerResponse.ID, new ContainerStartParameters(), waitContainerCts.Token);
 
             _output.WriteLine("Starting timeout to cancel WaitContainer operation.");
 
@@ -852,7 +854,7 @@ namespace Otter.Tests
             // Will wait forever here if cancelation fails.
             var waitContainerTask = _dockerClient.Containers.WaitContainerAsync(createContainerResponse.ID, waitContainerCts.Token);
 
-            var exception = await Assert.ThrowsAsync<TaskCanceledException>(() => waitContainerTask);
+            _ = await Assert.ThrowsAsync<TaskCanceledException>(() => waitContainerTask);
 
             stopWatch.Stop();
 
