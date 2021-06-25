@@ -8,12 +8,12 @@ using Xunit;
 namespace Otter.Tests
 {
     [Collection("Otter")]
-    public class ISwarmOperationsTests
+    public class SwarmOperationsTests
     {
         private readonly DockerClient _client;
         private readonly string _imageId;
 
-        public ISwarmOperationsTests(OtterFixture testFixture)
+        public SwarmOperationsTests(OtterFixture testFixture)
         {
             _client = testFixture.DockerClient;
             _imageId = testFixture.ImageId;

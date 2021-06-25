@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 namespace Otter.Tests
 {
     [Collection("Otter")]
-    public class IContainerOperationsTests
+    public class ContainerOperationsTests
     {
         private readonly CancellationTokenSource _cts;
         private readonly DockerClient _dockerClient;
@@ -20,7 +20,7 @@ namespace Otter.Tests
         private readonly string _imageId;
         private readonly TestOutput _output;
 
-        public IContainerOperationsTests(OtterFixture testFixture, ITestOutputHelper outputHelper)
+        public ContainerOperationsTests(OtterFixture testFixture, ITestOutputHelper outputHelper)
         {
             // Do not wait forever in case it gets stuck
             _cts = CancellationTokenSource.CreateLinkedTokenSource(testFixture.CancellationSource.Token);

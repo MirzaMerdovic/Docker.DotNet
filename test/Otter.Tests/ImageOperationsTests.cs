@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 namespace Otter.Tests
 {
     [Collection("Otter")]
-    public class IImageOperationsTests
+    public class ImageOperationsTests
     {
 
         private readonly CancellationTokenSource _cts;
@@ -20,7 +20,7 @@ namespace Otter.Tests
         private readonly DockerClientConfiguration _dockerConfiguration;
         private readonly DockerClient _dockerClient;
 
-        public IImageOperationsTests(OtterFixture testFixture, ITestOutputHelper _outputHelper)
+        public ImageOperationsTests(OtterFixture testFixture, ITestOutputHelper _outputHelper)
         {
             _output = new TestOutput(_outputHelper);
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Newtonsoft.Json;
 using Otter.Models;
 using Xunit;
@@ -13,7 +12,6 @@ namespace Otter.Tests
     [CollectionDefinition("Otter")]
     public class OtterTestsCollection : ICollectionFixture<OtterFixture>
     {
-        public const string NAME = "Otter";
     }
 
     public class OtterFixture : IDisposable
