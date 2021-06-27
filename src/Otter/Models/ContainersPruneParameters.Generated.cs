@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Otter.Converters.QueryString;
 
 namespace Otter.Models
 {

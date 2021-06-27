@@ -1,4 +1,5 @@
 ﻿using System;
+using Otter.Converters.QueryString;
 using Otter.Models;
 using Xunit;
 

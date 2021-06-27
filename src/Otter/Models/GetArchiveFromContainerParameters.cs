@@ -1,4 +1,6 @@
-﻿namespace Otter.Models
+﻿using Otter.Converters.QueryString;
+
+namespace Otter.Models
 {
     public class GetArchiveFromContainerParameters
     {

@@ -4,8 +4,8 @@ using System.Net;
 
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.Net.Http.Client;
 using System.Net.Security;
+using Otter.Http;
 
 namespace Otter.X509
 {

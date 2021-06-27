@@ -7,7 +7,9 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Net.Http.Client;
+using Otter.Http.Streaming;
+using Otter.Http;
+using Otter.Converters.QueryString;
 
 #if (NETSTANDARD1_6 || NETSTANDARD2_0)
 using System.Net.Sockets;
@@ -17,11 +19,11 @@ namespace Otter
 {
     public sealed class DockerClient : IDockerClient
     {
-        internal delegate void ApiResponseErrorHandlingDelegate(HttpStatusCode statusCode, string responseBody);
-
         private const string USER_AGENT = "Otter";
         private static readonly TimeSpan INFINITE_TIMEOUT = TimeSpan.FromMilliseconds(Timeout.Infinite);
-        
+
+        internal delegate void ApiResponseErrorHandlingDelegate(HttpStatusCode statusCode, string responseBody);
+
         private readonly HttpClient _client;
         private readonly Uri _endpointBaseUri;
         private readonly Version _requestedApiVersion;
@@ -33,18 +35,14 @@ namespace Otter
         public IImageOperations Images => new ImageOperations(this);
         public INetworkOperations Networks => new NetworkOperations(this);
         public IVolumeOperations Volumes => new VolumeOperations(this);
-
         public ISecretsOperations Secrets => new SecretsOperations(this);
-
         public ISwarmOperations Swarm => new SwarmOperations(this);
-
         public ITasksOperations Tasks => new TasksOperations(this);
-
         public ISystemOperations System => new SystemOperations(this);
-
         public IPluginOperations Plugin => new PluginOperations(this);
-
         public IExecOperations Exec => new ExecOperations(this);
+
+        public TimeSpan DefaultTimeout { get; set; }
 
         internal DockerClient(DockerClientConfiguration configuration, Version requestedApiVersion)
         {
@@ -110,7 +108,7 @@ namespace Otter
 #if (NETSTANDARD1_6 || NETSTANDARD2_0)
                 case "unix":
                     var pipeString = uri.LocalPath;
-                    handler = new ManagedHandler(async (string host, int port, CancellationToken cancellationToken) =>
+                    handler = new ManagedHandler(async (host, port, cancellationToken) =>
                     {
                         var sock = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
                         await sock.ConnectAsync(new UnixDomainSocketEndPoint(pipeString));
@@ -131,48 +129,9 @@ namespace Otter
             _client.Timeout = INFINITE_TIMEOUT;
         }
 
-        public TimeSpan DefaultTimeout { get; set; }
-
-        internal Task<DockerApiResponse> MakeRequestAsync(
-            IEnumerable<ApiResponseErrorHandlingDelegate> errorHandlers,
-            HttpMethod method,
-            string path,
-            CancellationToken token)
+        public void Dispose()
         {
-            return MakeRequestAsync(errorHandlers, method, path, null, null, token);
-        }
-
-        internal Task<DockerApiResponse> MakeRequestAsync(
-            IEnumerable<ApiResponseErrorHandlingDelegate> errorHandlers,
-            HttpMethod method,
-            string path,
-            IQueryString queryString,
-            CancellationToken token)
-        {
-            return MakeRequestAsync(errorHandlers, method, path, queryString, null, token);
-        }
-
-        internal Task<DockerApiResponse> MakeRequestAsync(
-            IEnumerable<ApiResponseErrorHandlingDelegate> errorHandlers,
-            HttpMethod method,
-            string path,
-            IQueryString queryString,
-            IRequestContent body,
-            CancellationToken token)
-        {
-            return MakeRequestAsync(errorHandlers, method, path, queryString, body, null, token);
-        }
-
-        internal Task<DockerApiResponse> MakeRequestAsync(
-            IEnumerable<ApiResponseErrorHandlingDelegate> errorHandlers,
-            HttpMethod method,
-            string path,
-            IQueryString queryString,
-            IRequestContent body,
-            IDictionary<string, string> headers,
-            CancellationToken token)
-        {
-            return MakeRequestAsync(errorHandlers, method, path, queryString, body, headers, DefaultTimeout, token);
+            Configuration.Dispose();
         }
 
         internal async Task<DockerApiResponse> MakeRequestAsync(
@@ -185,8 +144,19 @@ namespace Otter
             TimeSpan timeout,
             CancellationToken token)
         {
-            var response = await PrivateMakeRequestAsync(timeout, HttpCompletionOption.ResponseContentRead, method, path, queryString, headers, body, token).ConfigureAwait(false);
-            
+            var response =
+                await
+                    PrivateMakeRequestAsync(
+                        timeout,
+                        HttpCompletionOption.ResponseContentRead,
+                        method,
+                        path,
+                        queryString,
+                        headers,
+                        body,
+                        token)
+                    .ConfigureAwait(false);
+
             using (response)
             {
                 await HandleIfErrorResponseAsync(response.StatusCode, response, errorHandlers);
@@ -195,48 +165,6 @@ namespace Otter
 
                 return new DockerApiResponse(response.StatusCode, responseBody);
             }
-        }
-
-        internal Task<Stream> MakeRequestForStreamAsync(
-            IEnumerable<ApiResponseErrorHandlingDelegate> errorHandlers,
-            HttpMethod method,
-            string path,
-            CancellationToken token)
-        {
-            return MakeRequestForStreamAsync(errorHandlers, method, path, null, token);
-        }
-
-        internal Task<Stream> MakeRequestForStreamAsync(
-            IEnumerable<ApiResponseErrorHandlingDelegate> errorHandlers,
-            HttpMethod method,
-            string path,
-            IQueryString queryString,
-            CancellationToken token)
-        {
-            return MakeRequestForStreamAsync(errorHandlers, method, path, queryString, null, token);
-        }
-
-        internal Task<Stream> MakeRequestForStreamAsync(
-            IEnumerable<ApiResponseErrorHandlingDelegate> errorHandlers,
-            HttpMethod method,
-            string path,
-            IQueryString queryString,
-            IRequestContent body,
-            CancellationToken token)
-        {
-            return MakeRequestForStreamAsync(errorHandlers, method, path, queryString, body, null, token);
-        }
-
-        internal Task<Stream> MakeRequestForStreamAsync(
-            IEnumerable<ApiResponseErrorHandlingDelegate> errorHandlers,
-            HttpMethod method,
-            string path,
-            IQueryString queryString,
-            IRequestContent body,
-            IDictionary<string, string> headers,
-            CancellationToken token)
-        {
-            return MakeRequestForStreamAsync(errorHandlers, method, path, queryString, body, headers, INFINITE_TIMEOUT, token);
         }
 
         internal async Task<Stream> MakeRequestForStreamAsync(
@@ -249,16 +177,16 @@ namespace Otter
             TimeSpan timeout,
             CancellationToken token)
         {
-            var response = 
-                await 
+            var response =
+                await
                     PrivateMakeRequestAsync(
-                        timeout, 
-                        HttpCompletionOption.ResponseHeadersRead, 
-                        method, 
-                        path, 
-                        queryString, 
-                        headers, 
-                        body, 
+                        timeout,
+                        HttpCompletionOption.ResponseHeadersRead,
+                        method,
+                        path,
+                        queryString,
+                        headers,
+                        body,
                         token)
                     .ConfigureAwait(false);
 
@@ -275,16 +203,16 @@ namespace Otter
             IDictionary<string, string> headers,
             CancellationToken token)
         {
-            var response = 
-                await 
+            var response =
+                await
                     PrivateMakeRequestAsync(
-                        INFINITE_TIMEOUT, 
-                        HttpCompletionOption.ResponseHeadersRead, 
-                        method, 
-                        path, 
-                        queryString, 
-                        headers, 
-                        body, 
+                        INFINITE_TIMEOUT,
+                        HttpCompletionOption.ResponseHeadersRead,
+                        method,
+                        path,
+                        queryString,
+                        headers,
+                        body,
                         token)
                     .ConfigureAwait(false);
 
@@ -298,16 +226,16 @@ namespace Otter
             IQueryString queryString,
             CancellationToken cancellationToken)
         {
-            var response = 
-                await 
+            var response =
+                await
                     PrivateMakeRequestAsync(
-                        INFINITE_TIMEOUT, 
-                        HttpCompletionOption.ResponseHeadersRead, 
-                        method, 
-                        path, 
-                        queryString, 
-                        null, 
-                        null, 
+                        INFINITE_TIMEOUT,
+                        HttpCompletionOption.ResponseHeadersRead,
+                        method,
+                        path,
+                        queryString,
+                        null,
+                        null,
                         cancellationToken);
 
             await HandleIfErrorResponseAsync(response.StatusCode, response, errorHandlers);
@@ -315,27 +243,6 @@ namespace Otter
             var body = await response.Content.ReadAsStreamAsync();
 
             return new DockerApiStreamedResponse(response.StatusCode, body, response.Headers);
-        }
-
-        internal Task<WriteClosableStream> MakeRequestForHijackedStreamAsync(
-            IEnumerable<ApiResponseErrorHandlingDelegate> errorHandlers,
-            HttpMethod method,
-            string path,
-            IQueryString queryString,
-            IRequestContent body,
-            IDictionary<string, string> headers,
-            CancellationToken cancellationToken)
-        {
-            return 
-                MakeRequestForHijackedStreamAsync(
-                    errorHandlers, 
-                    method, 
-                    path, 
-                    queryString, 
-                    body, 
-                    headers, 
-                    INFINITE_TIMEOUT, 
-                    cancellationToken);
         }
 
         internal async Task<WriteClosableStream> MakeRequestForHijackedStreamAsync(
@@ -348,23 +255,23 @@ namespace Otter
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
-            var response = 
-                await 
+            var response =
+                await
                     PrivateMakeRequestAsync(
-                        timeout, 
-                        HttpCompletionOption.ResponseHeadersRead, 
-                        method, 
-                        path, 
-                        queryString, 
-                        headers, 
-                        body, 
+                        timeout,
+                        HttpCompletionOption.ResponseHeadersRead,
+                        method,
+                        path,
+                        queryString,
+                        headers,
+                        body,
                         cancellationToken)
                     .ConfigureAwait(false);
 
             await HandleIfErrorResponseAsync(response.StatusCode, response, errorHandlers);
 
             var content = response.Content as HttpConnectionResponseContent;
-            
+
             _ = content ?? throw new NotSupportedException("message handler does not support hijacked streams");
 
             return content.HijackStream();
@@ -387,7 +294,7 @@ namespace Otter
                 using (var timeoutTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                 {
                     timeoutTokenSource.CancelAfter(timeout);
-                    
+
                     return await _client.SendAsync(request, completionOption, timeoutTokenSource.Token).ConfigureAwait(false);
                 }
             }
@@ -402,8 +309,8 @@ namespace Otter
         }
 
         private async Task HandleIfErrorResponseAsync(
-            HttpStatusCode statusCode, 
-            HttpResponseMessage response, 
+            HttpStatusCode statusCode,
+            HttpResponseMessage response,
             IEnumerable<ApiResponseErrorHandlingDelegate> handlers)
         {
             bool isErrorResponse = statusCode < HttpStatusCode.OK || statusCode >= HttpStatusCode.BadRequest;
@@ -429,50 +336,25 @@ namespace Otter
 
             // No custom handler was fired. Default the response for generic success/failures.
             if (isErrorResponse)
-            {
-                throw new DockerApiException(statusCode, responseBody);
-            }
-        }
-
-        public async Task HandleIfErrorResponseAsync(HttpStatusCode statusCode, HttpResponseMessage response)
-        {
-            bool isErrorResponse = statusCode < HttpStatusCode.OK || statusCode >= HttpStatusCode.BadRequest;
-
-            string responseBody = null;
-
-            if (isErrorResponse)
-            {
-                // If it is not an error response, we do not read the response body because the caller may wish to consume it.
-                // If it is an error response, we do because there is nothing else going to be done with it anyway and
-                // we want to report the response body in the error message as it contains potentially useful info.
-                responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            }
-
-            // No custom handler was fired. Default the response for generic success/failures.
-            if (isErrorResponse)
                 throw new DockerApiException(statusCode, responseBody);
         }
 
-        internal HttpRequestMessage PrepareRequest(HttpMethod method, string path, IQueryString queryString, IDictionary<string, string> headers, IRequestContent data)
+        private HttpRequestMessage PrepareRequest(HttpMethod method, string path, IQueryString queryString, IDictionary<string, string> headers, IRequestContent data)
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentNullException(nameof(path));
 
-            var request = 
-                new HttpRequestMessage(
-                    method, 
-                    HttpUtility.BuildUri(_endpointBaseUri, _requestedApiVersion, path, queryString));
-
-            request.Version = new Version(1, 1);
+            var request = new HttpRequestMessage(method, BuildUri(_endpointBaseUri, _requestedApiVersion, path, queryString))
+            {
+                Version = new Version(1, 1)
+            };
 
             request.Headers.Add("User-Agent", USER_AGENT);
 
-            if (headers != null)
+
+            foreach (var header in headers ?? Enumerable.Empty<KeyValuePair<string, string>>())
             {
-                foreach (var header in headers)
-                {
-                    request.Headers.Add(header.Key, header.Value);
-                }
+                request.Headers.Add(header.Key, header.Value);
             }
 
             if (data != null)
@@ -484,9 +366,18 @@ namespace Otter
             return request;
         }
 
-        public void Dispose()
+        private static Uri BuildUri(Uri baseUri, Version requestedApiVersion, string path, IQueryString queryString)
         {
-            Configuration.Dispose();
+            if (baseUri == null)
+                throw new ArgumentNullException(nameof(baseUri));
+
+            var builder = new UriBuilder(baseUri);
+
+            builder.Path = requestedApiVersion == null ? builder.Path : builder.Path + $"v{requestedApiVersion}/";
+            builder.Path = string.IsNullOrWhiteSpace(path) ? builder.Path : builder.Path + path;
+            builder.Query = queryString == null ? builder.Query : queryString.GetQueryString();
+
+            return builder.Uri;
         }
     }
 }
